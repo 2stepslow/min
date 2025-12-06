@@ -148,6 +148,10 @@ public class BoardController {
                 request.getTitle(),
                 request.getContent()
         );
+
+        board1.setHits(0);  // 처음 글이니 0으로 시작
+        board1.setAuthor(user.getId());  // 로그인 한 userId를 author로 저장
+
         Board board = boardRepository.save(board1);  // 창고직원이 작업한 후 갖다준 board. 값 채워져있음
         int newPostId = board.getID();
         URI location = URI.create("/getDetail." + newPostId);  // 클라이언트한테 이 자원이 어디 생성되었는지를 말해주는 것.
