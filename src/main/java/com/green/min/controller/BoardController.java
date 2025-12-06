@@ -42,8 +42,9 @@ public class BoardController {
         int userId = Integer.parseInt(userIdAsString.toString()); // 세션 장부에서 지금 로그인 한 사용자 id 추출
 
         Optional<User> optionalUser = userRepository.findById(userId);
-        if(optionalUser.isPresent()) {
+        if(optionalUser.isEmpty()) {
             System.out.println("이런 유저 없음");
+            return null;  // 유저 못 찾았으면 null
         }
 
         return optionalUser.get();
@@ -101,12 +102,12 @@ public class BoardController {
         Board board = boardOptional.get();
 
         // board의 author로 user를 조회해서, 작성자의 이름을 얻어내야 함
-        Optional<User> userOptional = userRepository.findbyId(board.getAuthor());
+        Optional<User> userOptional = userRepository.findById(board.getAuthor());
         if(userOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        User writer = user = userOptional.get();
-        String writerName = writer.getname();  // <- 글 작성자의 이름 가져왔음
+        User writer = userOptional.get();
+        String writerName = writer.getName();  // <- 글 작성자의 이름 가져왔음
 
         // DTO 만들어서, DTO 응답해야 함
         PostResponse response = new PostResponse(
@@ -120,7 +121,7 @@ public class BoardController {
         board.setHits(board.getHits() + 1); // 조회수 1 늘리기
         boardRepository.save(board); // 변경된 조회수 데이터를 반영해서 다시 저장
 
-        return ResponseEntity.ok().build();              //  <==== 여기 근방에 뭘 추가 해야 됨... DTO응답관련
+        return ResponseEntity.ok(response);              //  <==== 여기 근방에 뭘 추가 해야 됨... DTO응답관련
     }
 
     // 3. 새로운 글 작성
@@ -166,12 +167,11 @@ public class BoardController {
         // 로그인 체크
         User user = getLoginUser(session);
         if(user == null) {
-            return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();  // 괄호 안에 401 넣어도 되고 이렇게 써도 됨
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();  // 괄호 안에 401 넣어도 되고 이렇게 써도 됨
         }
         System.out.println("안녕하세요" + user.getName() + "님. 당신의 요청은 허용되었습니다.");
 
 
-        //-------------------------------------------------------------
         // 요청자가 게시글 작성자와 일치하는지 확인
         int requestUserId = user.getId();
 
@@ -179,36 +179,13 @@ public class BoardController {
         if(boardOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
+
         Board board = boardOptional.get();
         int writerId = board.getAuthor();
 
         if(requestUserId != writerId) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();  // 401(UNAUTHORIZED) 아니고 403(FORBIDDEN) 던지기
         }
-        //-------------------------------------------------------------
-
-
-        // DB에서 원래 글 정보를 가져옴
-//        Optional<Board> boardOptional = boardRepository.findById(request.getId());   // id가 안담겨있다면 프론트 개발자 탓임ㅋ/레포지토리는 창고직원이므로 board엔티티로 줌
-        // DB에 1,2,3,4,5밖에 없는데 사용자가 7번을 달라고 함 -> board는 null이 됨 -> 사용자는 nullpointerexception 만남 -> 그러니 Optional붙여야 함(갑분 비약;?)
-        // Optional: 있을수도 있고, 없을수도 있다는 의미의 타입.
-        // 이유: DB에 게시글이 1,2,3,4,5뿐인데 사용자가 7 입력하면 JPA가 찾을수 없음
-        // -> Board board에 담을게 없음(null)
-        // -> 그 밑에 board.getTitle()같은 코드가 NullPointerException으로 폭발함
-        // 이런 실수 방지하기 위해 "없을수도 있으니 꺼내 쓰기 전에 확인부터 하셈"을 유도하기 위한 타입.
-        Optional<Board> boardOptional = boardRepository.findById(id);
-        if (!boardOptional.isPresent()) {      // Board에 값이 있다면 가져 와라. 없다면 else로 가서 sout 실행해라
-            // 수정할 대상 게시글을 DB에서 가져옴
-//            Board board = boardOptional.get();
-            // 수정할 대상을 찾음 (정책은 개발자가 정함. 백 프론트 소통이 중요!)
-            // 프론트랑 협의함: 수정된 값만 JSON 채워 보내주고, 수정 안된 값은 null로 채우기 (수정된것과 기존꺼 비교해서 바뀌었으면 update해주는 방법도 있음(?))
-
-            System.out.println("게시글을 찾을 수 없습니다.");
-            return ResponseEntity.notFound().build();
-        }
-
-        // 여기까지 왔다는 건 값이 있다는 뜻이니 안전하게 get()
-        Board board = boardOptional.get();
 
         // 수정할 필드만 선택적으로 업데이트 (null이 아닌 것만 반영)
         if (request.getContent() != null) {  // null 아니면 수정했다는 뜻
@@ -229,7 +206,6 @@ public class BoardController {
 
 
     // 5. 삭제
-//    @DeleteMapping("/deletePost/{id}")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePost(@PathVariable int id, HttpSession session) {
 
