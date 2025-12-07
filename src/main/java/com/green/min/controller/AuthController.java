@@ -20,7 +20,6 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 public class AuthController {
     private UserRepository userRepository;
-
     private PasswordEncoder passwordEncoder;
 
     public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder) {  // 스프링이 new된 userRepository를 자동으로 넣어줄것. 책임이 역전되었다=IoC
@@ -64,7 +63,7 @@ public class AuthController {
         session.setAttribute("username", user.getUsername());
         // 위 코드를 실행하는 순간 서버의 세션(장부)에 아래와 같은 내용이 들어감
         //      ID        | userID | username |  exp
-        //  A908DA(랜덤값) |    3   |   정로션  | 30분후
+        //  A908DA(랜덤값) |    3   |   정로션  |  30분후
         // 그리고 스프링부트가 ID(A908DA)를 알아서 응답으로 내림
         // 그럼 브라우저가 그 sessionID를 다음부터 다른 요청에 붙여서 올려줌
 

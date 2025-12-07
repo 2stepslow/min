@@ -25,7 +25,7 @@ public class Board {
     private int author;
 
 
-    // 기본 생성자: 필드 포기화 없는 생성자를 뜻함
+    // 기본 생성자: 필드 초기화 없는 생성자를 뜻함
     // 우리가 아니라 JPA가 쓸거임
     public Board() {}
 

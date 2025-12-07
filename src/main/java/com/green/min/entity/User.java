@@ -23,8 +23,7 @@ public class User {
     @Column(name = "name")
     private String name;
 
-    // 생성자, getter/setter
-
+    // ===생성자===
     // JPA가 써야되는 기본 생성자 (인자 아무것도 받지 않음)
     public User() {}
 
@@ -35,6 +34,7 @@ public class User {
         this.name = name;
     }
 
+    // ===getter/setter===
     public String getUsername() {
         return username;
     }
