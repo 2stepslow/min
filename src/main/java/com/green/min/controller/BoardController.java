@@ -90,16 +90,16 @@ public class BoardController {
         }
         System.out.println("안녕하세요" + user.getName() + "님. 당신의 요청은 허용되었습니다.");
 
-
+        // DB에서 id에 해당하는 row 찾고, 있으면 Board 객체 만들고 Optional에 넣어서 돌려주고, 없으면 빈 Optional 돌려줌
         Optional<Board> boardOptional = boardRepository.findById(id);
 
         // 값이 없으면(Optional이 비어 있으면) 404 반환
-        if (boardOptional.isEmpty()) {
-            return ResponseEntity.notFound().build();
+        if (boardOptional.isEmpty()) {  // 상자 비었냐? 먼저 확인
+            return ResponseEntity.notFound().build();  // 비었으면 여기서 끝내 (return)
         }
 
         // 여기까지 내려왔다는 건 값이 있다는 뜻이니 안전하게 get()
-        Board board = boardOptional.get();
+        Board board = boardOptional.get();  // get(): Optional<Board> 상자 안에 있는 Board 객체 꺼내서 board 변수에 넣어라
 
         // board의 author로 user를 조회해서, 작성자의 이름을 얻어내야 함
         Optional<User> userOptional = userRepository.findById(board.getAuthor());
@@ -162,14 +162,14 @@ public class BoardController {
 
     // 4. 수정
     @PatchMapping("/{id}")
-    public ResponseEntity<Void> updatePost(
+    public ResponseEntity<Void> updatePost(  // ResponseEntity: HTTP 응답 담는 포장지 / <Void>: 이 응답은 바디(내용물) 없음
             @PathVariable int id,
-            @RequestBody PostUpdateRequest request,
-            HttpSession session
+            @RequestBody PostUpdateRequest request,  // HTTP body(JSON등)의 내용을 PostUpdateRequest라는 DTO형태로 받아옴
+            HttpSession session  // 현재 요청 보낸 사람의 세션 정보 / session.getAttribute("userId")로 누가 로그인했는지 확인할 수 있음
     ) {
 
         // 로그인 체크
-        User user = getLoginUser(session);
+        User user = getLoginUser(session);  // getLoginUser(session) 메서드 호출해 현재 로그인 한 유저 가져옴
         if(user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();  // 괄호 안에 401 넣어도 되고 이렇게 써도 됨
         }
@@ -177,24 +177,26 @@ public class BoardController {
 
 
         // 요청자가 게시글 작성자와 일치하는지 확인
-        int requestUserId = user.getId();
+        int requestUserId = user.getId();  // User 엔티티의 getter 이용해 로그인 한 user의 id값 꺼내서 requestUserId 변수에 저장
 
+        // DB에서 id에 해당하는 글(Board) 찾는데 있는지 없는지 모르니 Optional<Board>로 싸서 반환
         Optional<Board> boardOptional = boardRepository.findById(id);
-        if(boardOptional.isEmpty()) {
+        if(boardOptional.isEmpty()) {  // 게시글이 없으면 true
             return ResponseEntity.notFound().build();
         }
 
-        Board board = boardOptional.get();
-        int writerId = board.getAuthor();
+        // 위에서 값 없는 경우는 걸렀으니, 여기까지 왔으면 값 있는 것.
+        Board board = boardOptional.get(); // Optional 상자에 있던 Board 객체 꺼내서 board 변수에 넣음
+        int writerId = board.getAuthor(); // Board의 author필드 getter로 꺼내 writerId 변수에 넣음
 
-        if(requestUserId != writerId) {
+        if(requestUserId != writerId) {  // requestUserId(로그인한사람), writerId(작성자) 다르면 true
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();  // 401(UNAUTHORIZED) 아니고 403(FORBIDDEN) 던지기
         }
 
         // 수정할 필드만 선택적으로 업데이트 (null이 아닌 것만 반영)
-        if (request.getContent() != null) {  // null 아니면 수정했다는 뜻
+        if (request.getContent() != null) {  // null 아니면 수정했다는 뜻 (JSON에서 content 안보냈으면 getContent()는 null)
             // DB UPDATE 해야 됨
-            board.setContent(request.getContent());
+            board.setContent(request.getContent());  // Board엔티티의 content필드를 새로운 값으로 바꿈
         }
 
         if (request.getTitle() != null) {  // null 아니면 수정했다는 뜻
@@ -202,10 +204,10 @@ public class BoardController {
         }
 
         // 변경 내용을 DB에 반영
-        boardRepository.save(board);
+        boardRepository.save(board);  // 이미 존재하는 Board 엔티티를 저장하므로, JPA입장에서는 UPDATE에 해당
 
-        // 바디 없는 200 OK 응답
-        return ResponseEntity.ok().build();
+        // 바디 없는 200 OK 응답 ('ResponseEntity<Void>'이기 때문)
+        return ResponseEntity.ok().build();  // .ok: status code 200 / .build(): 이 설정대로 응답 객체를 완성해서 돌려줘
     }
 
 

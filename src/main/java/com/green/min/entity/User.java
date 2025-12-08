@@ -10,10 +10,6 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    public int getId() {
-        return id;
-    }
-
     @Column(name = "username", nullable = false)
     private String username;
 
@@ -35,6 +31,11 @@ public class User {
     }
 
     // ===getter/setter===
+
+    public int getId() {
+        return id;
+    }
+
     public String getUsername() {
         return username;
     }

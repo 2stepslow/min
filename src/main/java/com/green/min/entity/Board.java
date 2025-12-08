@@ -38,9 +38,7 @@ public class Board {
 
 
     // Getter (private이므로)
-    public int getID() {
-        return id;
-    }
+    public int getID() { return id; }
 
     public String getTitle() {
         return title;
