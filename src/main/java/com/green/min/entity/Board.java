@@ -31,9 +31,10 @@ public class Board {
 
 
     // 일반 생성자 -> 우리가 쓸거임
-    public Board(String title, String content) {
+    public Board(String title, String content, int authorId) {
         this.title = title;
         this.content = content;
+        this.author = authorId;
     }
 
 
