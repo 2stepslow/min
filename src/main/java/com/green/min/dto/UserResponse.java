@@ -7,7 +7,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class PostCreateRequest {
-    private String title;
-    private String content;
+public class UserResponse {
+
 }

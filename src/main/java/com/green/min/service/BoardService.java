@@ -29,6 +29,7 @@ public class BoardService {
         this.userRepository = userRepository;
     }
 
+    // 로그인 체크
     public User getLoginUser(HttpSession session) {
         Object userIdAsString = session.getAttribute(("userId"));
         if (userIdAsString == null) {  // 스프링부트 내부 로직때문에 userId null이면 id를 못찾은것!
@@ -50,7 +51,7 @@ public class BoardService {
         // 로그인 체크
         User user = getLoginUser(session);
 
-        System.out.println("안녕하세요" + user.getName() + "님. 당신의 요청은 허용되었습니다.");
+        System.out.println("안녕하세요" + user.getUsername() + "님. 당신의 요청은 허용되었습니다.");
 
         List<Board> results = boardRepository.findAll();
 
@@ -66,7 +67,7 @@ public class BoardService {
             String authorName = author.getName();
 
             PostResponse newResult = new PostResponse(
-                    board.getID(),
+                    board.getId(),
                     board.getTitle(),
                     board.getContent(),
                     authorName
@@ -91,8 +92,15 @@ public class BoardService {
             throw new ResourceNotFoundException("게시글을 찾을 수 없습니다.");
         }
 
+
+
         // 여기까지 내려왔다는 건 값이 있다는 뜻이니 안전하게 get()
         Board board = boardOptional.get();  // get(): Optional<Board> 상자 안에 있는 Board 객체 꺼내서 board 변수에 넣어라
+
+        // 삭제된 경우 유저에게 404 내려가도록 설정해야 함
+        if(board.isDeleted() == true) {
+            throw new ResourceNotFoundException("삭제된 게시글입니다.");
+        }
 
         // board의 author로 user를 조회해서, 작성자의 이름을 얻어내야 함
         Optional<User> userOptional = userRepository.findById(board.getAuthor());
@@ -104,7 +112,7 @@ public class BoardService {
 
         // DTO 만들어서, DTO 응답해야 함
         PostResponse response = new PostResponse(
-                board.getID(),
+                board.getId(),
                 board.getTitle(),
                 board.getContent(),
                 writerName
@@ -137,17 +145,24 @@ public class BoardService {
 
         // 2. 받았으면 저장하면 됨
         //우리쪽에서 만든걸 DB에넣는건 어케 씀?
-        Board board1 = new Board(  // 창고직원이 작업하기 전 board. 비어있음
-                request.getTitle(),
-                request.getContent(),
-                user.getId()
-        );
+//        Board board1 = new Board(  // 창고직원이 작업하기 전 board. 비어있음
+//                request.getTitle(),
+//                request.getContent(),
+//                user.getId(),
+//                LocalDateTime.now()  // 우리가 값 넣어줘야됨
+//        );
+
+        Board board1 = new Board();
+        board1.setTitle(request.getTitle());
+        board1.setContent(request.getContent());
+        board1.setAuthor(user.getId());
+//        board1.setCreatedDatetime(LocalDateTime.now());
 
         board1.setHits(0);  // 처음 글이니 0으로 시작
         board1.setAuthor(user.getId());  // 로그인 한 userId를 author로 저장
 
         Board newPost = boardRepository.save(board1);  // 창고직원이 작업한 후 갖다준 board. 값 채워져있음
-        return newPost.getID();
+        return newPost.getId();
     }
 
     // 4. 게시글 수정 (돌려줄게 없음. void)
@@ -177,7 +192,6 @@ public class BoardService {
             throw new AuthenticationFailureException("권한이 없습니다.");
         }
 
-        //--------------------??
         // 수정할 필드만 선택적으로 업데이트 (null이 아닌 것만 반영)
         if (request.getContent() != null) {  // null 아니면 수정했다는 뜻 (JSON에서 content 안보냈으면 getContent()는 null)
             // DB UPDATE 해야 됨
@@ -187,7 +201,6 @@ public class BoardService {
         if (request.getTitle() != null) {  // null 아니면 수정했다는 뜻
             board.setTitle(request.getTitle());
         }
-        //--------------------??
     }
 
     // 5. 글 삭제
@@ -219,39 +232,23 @@ public class BoardService {
     public List<PostResponse> getMyPost(HttpSession session) {
         User user = getLoginUser(session);
 
-        if (user == null) {
-            throw new AuthenticationFailureException("로그인이 필요합니다");
-        }
-        System.out.println("안녕하세요" + user.getName() + "님. 당신의 요청은 허용되었습니다.");
 
-        List<Board> results = boardRepository.findAll();  // ??
+        List<Board> results = boardRepository.findAll();  // ???
 
         // 새로운 결과 전용 상자 제작
         List<PostResponse> response = new ArrayList<>();
 
+        // board를 post response로 변경하는 로직
         for (Board board : results) {
-            Optional<User> optionalUser = userRepository.findById(board.getAuthor());
-            if (optionalUser.isEmpty()) {
-                throw new ResourceNotFoundException("유저를 찾을 수 없습니다.");
-            }
-            if (board.getAuthor() == user.getId()) {
-                User author = optionalUser.get();
-                String authorName = author.getName();
 
-                PostResponse newResult = new PostResponse(
-                        board.getID(),
-                        board.getTitle(),
-                        board.getContent(),
-                        authorName
-                );
-                response.add(newResult);
-            }
+            PostResponse newResult = new PostResponse(
+                    board.getId(),
+                    board.getTitle(),
+                    board.getContent(),
+                    user.getName()
+            );
+            response.add(newResult);
         }
         return response;
     }
 }
-
-
-//}
-
-// list<PostResponse>로 작동하도록 변경

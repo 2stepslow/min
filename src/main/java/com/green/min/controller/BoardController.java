@@ -3,25 +3,17 @@ package com.green.min.controller;
 import com.green.min.dto.PostCreateRequest;
 import com.green.min.dto.PostResponse;
 import com.green.min.dto.PostUpdateRequest;
-import com.green.min.entity.Board;
-import com.green.min.entity.User;
 import com.green.min.exceptions.AuthenticationFailureException;
 import com.green.min.exceptions.AuthorizationFailureException;
 import com.green.min.exceptions.ResourceNotFoundException;
-import com.green.min.repository.BoardRepository;
-import com.green.min.repository.UserRepository;
 import com.green.min.service.BoardService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
 @RestController  // 이 어노테이션을 붙여야, 요청을 받을 수 있음
 @RequestMapping("/api/board")  // api board 관련 요청만 처리해라 (역할 분배)
@@ -34,7 +26,7 @@ public class BoardController {
     // 서버와 DB가 기본적으로 연결 되어 있어야 됨. 안되어있으면 이하 작업 모두 할 수 없음.
 
 
-    // 1. 모든 게시글을, 작성 최신순으로 조회.
+    // 1. 게시글 조회 API
     @GetMapping
     public ResponseEntity<?> getAllBoards(HttpSession session) {  // 얘가 내려갈지 쟤가 내려갈지 잘 모르겠다: <?>사용
         try {
@@ -47,7 +39,7 @@ public class BoardController {
     }
 
 
-    // 2. 상세 조회. 게시글 클릭했을 때, 그 글의 상세 정보 줘야 함.
+    // 2. 글 상세조회 API
     /// GET인 경우 RequestBody 사용하면 안되는 규칙 꼭 지키기
     // 데이터는 URL에 포함시켜 보내기  ex.green.tistory.com/81
     // /81, /99 등 바뀔수 있으니 URL은 특정 숫자가 아닌, {id}로 설정
@@ -65,7 +57,7 @@ public class BoardController {
     }
 
 
-    // 3. 새로운 글 작성
+    // 3. 새글작성 API
     @PostMapping
     public ResponseEntity<?> createNewPost(@RequestBody PostCreateRequest request, HttpSession session) {
         try {
@@ -80,7 +72,7 @@ public class BoardController {
     }
 
 
-    // 4. 수정
+    // 4. 수정 API
     @PatchMapping("/{id}")
     public ResponseEntity<?> updatePost(  // ResponseEntity: HTTP 응답 담는 포장지 / <Void>: 이 응답은 바디(내용물) 없음
         @PathVariable int id,
@@ -101,7 +93,7 @@ public class BoardController {
     }
 
 
-    // 5. 삭제
+    // 5. 삭제 API
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletePost(@PathVariable int id, HttpSession session) {
         try {
