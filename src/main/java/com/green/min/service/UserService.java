@@ -10,8 +10,12 @@ import jakarta.servlet.http.HttpSession;
 import java.util.Optional;
 
 public class UserService {
-    // 기본생성자
-    // 일반생성자
+
+    public final UserRepository userRepository;
+
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
 
     // 로그인 확인
@@ -37,21 +41,19 @@ public class UserService {
     public UserResponse getDetailUser(HttpSession session) {
         User user = getLoginUser(session);  // 로그인 한 user.
 
-        // 빈 상자를 만들어야 한다. 어떤 빈 상자?
-        // 로그인 한 user의 id가 db에 있는 user의 id와 다르다면,
-        // 컨트롤러에게 오류가 있다고 말함.
-        // 로그인 한 user의 id가 db에 있는 user의 id와 같다면,
-        // 꺼낸다. username, name, createddatetime. 위에서 만든 빈 상자에 넣는다.
-        // response(상자)를 return한다.
+        Optional<User> userOptional = UserRepository.findbyId();
 
-        // 응답객체 만들고 username, name, createddatetime 넣는다
-        // 이후 더 생각해보셈
+        UserResponse response = new UserResponse(
 
-        user.getName()
+                // DTO로 변환
+        )
 
 
+        user.getName()  // 왜썼는지 잘 모르겠음
 
-        }
+
+        return response;
+        
     }
 
     // 유저 정보 수정
